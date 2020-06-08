@@ -3861,7 +3861,7 @@ const parseServers = () => core_1.getInput("servers")
 const servers = parseServers();
 const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     core_1.info(`testing server ${server}`);
-    ts_nats_1.connect(server).then(nc => nc.close());
+    return ts_nats_1.connect(server).then(nc => nc.close());
 });
 (() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -3872,10 +3872,6 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
         if (core_1.getInput("cluster") === "true") {
             core_1.info("testing cluster");
             let p = [];
-            p = p.concat(servers.map(server => new Promise((_, j) => {
-                core_1.info(`testing subscription on ${server}`);
-                setTimeout(() => j(new Error(`subscription timeout`)), 5000);
-            })));
             yield Promise.all(p);
         }
     }
