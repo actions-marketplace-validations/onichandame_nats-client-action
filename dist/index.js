@@ -3872,6 +3872,11 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
     for (let server of servers)
         con.push(testServer(server));
     yield Promise.all(con).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+    if (core_1.getInput("cluster") === "true") {
+        core_1.info("testing cluster");
+        const p = [];
+        yield Promise.all(p).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+    }
 }))();
 //# sourceMappingURL=index.js.map
 
