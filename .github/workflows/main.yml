@@ -7,9 +7,9 @@ jobs:
 
     steps:
       - name: Create Nats server
-        run: sudo docker run -d -p 4222:4222 nats
+        run: sudo docker run -d -p 4222:4222 nats && sudo docker run -d -p 4223:4222 nats
 
       - name: connect to server
         uses: onichandame/nats-client-action@master
         with:
-          servers: "nats://localhost:4222"
+          servers: "nats://localhost:4222 nats://localhost:4223"
