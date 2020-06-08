@@ -3868,12 +3868,17 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
     });
 });
 (() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    core_1.info(`cluster1: ${core_1.getInput("cluster")}`);
-    let con = [];
-    for (let server of servers)
-        con.push(testServer(server));
-    yield Promise.all(con).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
-    core_1.info(`cluster2: ${core_1.getInput("cluster")}`);
+    try {
+        core_1.info(`cluster1: ${core_1.getInput("cluster")}`);
+        let con = [];
+        for (let server of servers)
+            con.push(testServer(server));
+        yield Promise.all(con);
+        core_1.info(`cluster2: ${core_1.getInput("cluster")}`);
+    }
+    catch (e) {
+        core_1.setFailed(JSON.stringify(e));
+    }
 }))();
 //# sourceMappingURL=index.js.map
 

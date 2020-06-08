@@ -17,9 +17,13 @@ const testServer = async (server: string) => {
     })
 }
 ;(async () => {
-  info(`cluster1: ${getInput("cluster")}`)
-  let con: Promise<any>[] = []
-  for (let server of servers) con.push(testServer(server))
-  await Promise.all(con).catch(e => setFailed(JSON.stringify(e.message || e)))
-  info(`cluster2: ${getInput("cluster")}`)
+  try {
+    info(`cluster1: ${getInput("cluster")}`)
+    let con: Promise<any>[] = []
+    for (let server of servers) con.push(testServer(server))
+    await Promise.all(con)
+    info(`cluster2: ${getInput("cluster")}`)
+  } catch (e) {
+    setFailed(JSON.stringify(e))
+  }
 })()
