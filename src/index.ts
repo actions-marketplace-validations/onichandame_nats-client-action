@@ -1,5 +1,11 @@
 import { setFailed, info, getInput } from "@actions/core"
+import { generate } from "randomstring"
 import { connect } from "ts-nats"
+
+const randomOptions: Parameters<typeof generate>[0] = {
+  length: 20,
+  charset: "alphanumeric"
+}
 
 const parseServers = (): string[] =>
   getInput("servers")
@@ -19,7 +25,21 @@ const testServer = async (server: string) => {
     await Promise.all(con)
     if (getInput("cluster") === "true") {
       info("testing cluster")
-      let p: Promise<any>[] = []
+      const p = servers.map(
+        server =>
+          new Promise((r, j) => {
+            info(`testing subscription on ${server}`)
+            const subject = generate(randomOptions)
+            let count = 0
+            const total = servers.length
+            connect(server).then(nc => {
+              nc.subscribe(subject, () => {
+                if (++count == total) r()
+              })
+            })
+            setTimeout(() => j(new Error(`subscription timeout`)), 5000)
+          })
+      )
       await Promise.all(p)
     }
   } catch (e) {
