@@ -4011,20 +4011,21 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
         yield Promise.all(con);
         if (core_1.getInput("cluster") === "true") {
             core_1.info("testing cluster");
-            const p = servers.map(server => new Promise((r, j) => {
+            for (let server of servers) {
                 core_1.info(`testing subscription on ${server}`);
                 const subject = randomstring_1.generate(randomOptions);
-                let count = 0;
                 const total = servers.length;
-                ts_nats_1.connect(server).then(nc => {
-                    nc.subscribe(subject, () => {
-                        if (++count == total)
-                            r();
-                    });
-                });
-                setTimeout(() => j(new Error(`subscription timeout`)), 5000);
-            }));
-            yield Promise.all(p);
+                let count = 0;
+                const nc = yield ts_nats_1.connect(server);
+                nc.subscribe(subject, () => ++count);
+                for (let ins of servers) {
+                    const i = yield ts_nats_1.connect(ins);
+                    i.publish(subject);
+                    yield i.flush();
+                }
+                if (count < total)
+                    throw new Error(`${server} expects ${total} messages but only got ${count}`);
+            }
         }
     }
     catch (e) {

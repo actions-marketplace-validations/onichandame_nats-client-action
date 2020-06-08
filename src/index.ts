@@ -25,22 +25,23 @@ const testServer = async (server: string) => {
     await Promise.all(con)
     if (getInput("cluster") === "true") {
       info("testing cluster")
-      const p = servers.map(
-        server =>
-          new Promise((r, j) => {
-            info(`testing subscription on ${server}`)
-            const subject = generate(randomOptions)
-            let count = 0
-            const total = servers.length
-            connect(server).then(nc => {
-              nc.subscribe(subject, () => {
-                if (++count == total) r()
-              })
-            })
-            setTimeout(() => j(new Error(`subscription timeout`)), 5000)
-          })
-      )
-      await Promise.all(p)
+      for (let server of servers) {
+        info(`testing subscription on ${server}`)
+        const subject = generate(randomOptions)
+        const total = servers.length
+        let count = 0
+        const nc = await connect(server)
+        nc.subscribe(subject, () => ++count)
+        for (let ins of servers) {
+          const i = await connect(ins)
+          i.publish(subject)
+          await i.flush()
+        }
+        if (count < total)
+          throw new Error(
+            `${server} expects ${total} messages but only got ${count}`
+          )
+      }
     }
   } catch (e) {
     setFailed(JSON.stringify(e))
