@@ -3860,10 +3860,10 @@ const parseServers = () => core_1.getInput("servers")
     .filter(v => !!v);
 const servers = parseServers();
 const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    return ts_nats_1.connect(server)
+    core_1.info(`testing server ${server}`);
+    ts_nats_1.connect(server)
         .then(nc => nc.close())
         .catch(e => {
-        core_1.info(`testing server ${server}`);
         core_1.setFailed(`server ${server} failed due to ${JSON.stringify(e)}`);
     });
 });
