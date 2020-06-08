@@ -9,10 +9,12 @@ const parseServers = (): string[] =>
 const servers = parseServers()
 
 const testServer = async (server: string) =>
-  connect(server).catch(e => {
-    info(`testing server ${server}`)
-    setFailed(`server ${server} failed due to ${JSON.stringify(e)}`)
-  })
+  connect(server)
+    .then(nc => nc.close())
+    .catch(e => {
+      info(`testing server ${server}`)
+      setFailed(`server ${server} failed due to ${JSON.stringify(e)}`)
+    })
 ;(async () => {
   const con: Promise<any>[] = []
   for (let server of servers) con.push(testServer(server))
