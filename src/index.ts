@@ -27,6 +27,7 @@ const testServer = async (server: string) => {
   for (let server of servers) con.push(testServer(server))
   await Promise.all(con).catch(e => setFailed(JSON.stringify(e.message || e)))
   if (getInput("cluster") === "true") {
+    info("testing cluster")
     const p: Promise<any>[] = []
     for (let server of servers) {
       const subject = generate(randomOptions)
@@ -35,6 +36,9 @@ const testServer = async (server: string) => {
         new Promise((r, j) => {
           let count = 0
           nc.subscribe(subject, () => {
+            info(
+              `testing subscription on ${server} ${count + 1}/${servers.length}`
+            )
             if (++count === servers.length) r()
           })
           setTimeout(() => j(new Error(`subscription timeout`)), 1000)
