@@ -21,9 +21,4 @@ const testServer = async (server: string) => {
   for (let server of servers) con.push(testServer(server))
   await Promise.all(con).catch(e => setFailed(JSON.stringify(e.message || e)))
   info(`cluster: ${getInput("cluster")}`)
-  if (getInput("cluster") === "true") {
-    info("testing cluster")
-    const p: Promise<any>[] = []
-    await Promise.all(p).catch(e => setFailed(JSON.stringify(e.message || e)))
-  }
 })()
