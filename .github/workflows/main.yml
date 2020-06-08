@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Create Nats server
-        run: sudo docker run -d -p 4222:4222 --name master --cluster nats://0.0.0.0:6222 nats && sudo docker run -d -p 4223:4222 --cluster nats://0.0.0.0:6222 --routes=nats://master:6222 nats
+        run: sudo docker run -d -p 4222:4222 --name master nats --cluster nats://0.0.0.0:6222 && sudo docker run -d -p 4223:4222 nats --cluster nats://0.0.0.0:6222 --routes=nats://master:6222
 
       - name: connect to server
         uses: onichandame/nats-client-action@master
