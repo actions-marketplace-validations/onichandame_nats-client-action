@@ -4015,6 +4015,16 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
             for (let server of servers) {
                 core_1.info(`testing subscription on ${server}`);
                 const subject = randomstring_1.generate(randomOptions);
+                p.push(new Promise((r, j) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+                    let count = 0;
+                    const nc = yield ts_nats_1.connect(server);
+                    nc.subscribe(subject, () => {
+                        core_1.info(`${server} ${count + 1}/${servers.length}`);
+                        if (++count === servers.length)
+                            r();
+                    });
+                    setTimeout(() => j(new Error(`subscription timeout`)), 5000);
+                })));
                 for (let target of servers)
                     ts_nats_1.connect(target).then(nc => {
                         nc.publish(subject);
