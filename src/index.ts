@@ -25,27 +25,24 @@ const testServer = async (server: string) => {
     await Promise.all(con)
     if (getInput("cluster") === "true") {
       info("testing cluster")
-      const p: Promise<any>[] = []
-      for (let server of servers) {
-        info(`testing subscription on ${server}`)
-        const subject = generate(randomOptions)
-        p.push(
-          new Promise(async (r, j) => {
-            let count = 0
-            const nc = await connect(server)
-            nc.subscribe(subject, () => {
-              info(`${server} ${count + 1}/${servers.length}`)
-              if (++count === servers.length) r()
+      let p: Promise<any>[] = []
+      p = p.concat(
+        servers.map(
+          server =>
+            new Promise((r, j) => {
+              info(`testing subscription on ${server}`)
+              const subject = generate(randomOptions)
+              let count = 0
+              const total = servers.length
+              connect(subject).then(nc => {
+                nc.subscribe(subject, () => {
+                  if (++count == total) r()
+                })
+              })
+              setTimeout(() => j(new Error(`subscription timeout`)), 5000)
             })
-            setTimeout(() => j(new Error(`subscription timeout`)), 5000)
-          })
         )
-        for (let target of servers)
-          connect(target).then(nc => {
-            nc.publish(subject)
-            p.push(Promise.resolve(nc.flush()))
-          })
-      }
+      )
       await Promise.all(p)
     }
   } catch (e) {

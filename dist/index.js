@@ -4011,26 +4011,20 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
         yield Promise.all(con);
         if (core_1.getInput("cluster") === "true") {
             core_1.info("testing cluster");
-            const p = [];
-            for (let server of servers) {
+            let p = [];
+            p = p.concat(servers.map(server => new Promise((r, j) => {
                 core_1.info(`testing subscription on ${server}`);
                 const subject = randomstring_1.generate(randomOptions);
-                p.push(new Promise((r, j) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-                    let count = 0;
-                    const nc = yield ts_nats_1.connect(server);
+                let count = 0;
+                const total = servers.length;
+                ts_nats_1.connect(subject).then(nc => {
                     nc.subscribe(subject, () => {
-                        core_1.info(`${server} ${count + 1}/${servers.length}`);
-                        if (++count === servers.length)
+                        if (++count == total)
                             r();
                     });
-                    setTimeout(() => j(new Error(`subscription timeout`)), 5000);
-                })));
-                for (let target of servers)
-                    ts_nats_1.connect(target).then(nc => {
-                        nc.publish(subject);
-                        p.push(Promise.resolve(nc.flush()));
-                    });
-            }
+                });
+                setTimeout(() => j(new Error(`subscription timeout`)), 5000);
+            })));
             yield Promise.all(p);
         }
     }
