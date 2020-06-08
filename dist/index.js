@@ -4001,32 +4001,29 @@ const parseServers = () => core_1.getInput("servers")
 const servers = parseServers();
 const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     core_1.info(`testing server ${server}`);
-    ts_nats_1.connect(server)
-        .then(nc => nc.close())
-        .catch(e => {
-        core_1.setFailed(`server ${server} failed due to ${JSON.stringify(e)}`);
-    });
+    ts_nats_1.connect(server).then(nc => nc.close());
 });
 (() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     try {
         let con = [];
         for (let server of servers)
             con.push(testServer(server));
-        yield Promise.all(con).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+        yield Promise.all(con);
         if (core_1.getInput("cluster") === "true") {
             core_1.info("testing cluster");
             const p = [];
             for (let server of servers) {
+                core_1.info(`testing subscription on ${server}`);
                 const subject = randomstring_1.generate(randomOptions);
                 const nc = yield ts_nats_1.connect(server);
                 p.push(new Promise((r, j) => {
                     let count = 0;
                     nc.subscribe(subject, () => {
-                        core_1.info(`testing subscription on ${server} ${count + 1}/${servers.length}`);
+                        core_1.info(`${server} ${count + 1}/${servers.length}`);
                         if (++count === servers.length)
                             r();
                     });
-                    setTimeout(() => j(new Error(`subscription timeout`)), 1000);
+                    setTimeout(() => j(new Error(`subscription timeout`)), 5000);
                 }));
                 for (let target of servers)
                     ts_nats_1.connect(target).then(nc => {

@@ -16,35 +16,28 @@ const servers = parseServers()
 
 const testServer = async (server: string) => {
   info(`testing server ${server}`)
-  connect(server)
-    .then(nc => nc.close())
-    .catch(e => {
-      setFailed(`server ${server} failed due to ${JSON.stringify(e)}`)
-    })
+  connect(server).then(nc => nc.close())
 }
 ;(async () => {
   try {
     let con: Promise<any>[] = []
     for (let server of servers) con.push(testServer(server))
-    await Promise.all(con).catch(e => setFailed(JSON.stringify(e.message || e)))
+    await Promise.all(con)
     if (getInput("cluster") === "true") {
       info("testing cluster")
       const p: Promise<any>[] = []
       for (let server of servers) {
+        info(`testing subscription on ${server}`)
         const subject = generate(randomOptions)
         const nc = await connect(server)
         p.push(
           new Promise((r, j) => {
             let count = 0
             nc.subscribe(subject, () => {
-              info(
-                `testing subscription on ${server} ${count + 1}/${
-                  servers.length
-                }`
-              )
+              info(`${server} ${count + 1}/${servers.length}`)
               if (++count === servers.length) r()
             })
-            setTimeout(() => j(new Error(`subscription timeout`)), 1000)
+            setTimeout(() => j(new Error(`subscription timeout`)), 5000)
           })
         )
         for (let target of servers)
