@@ -2484,6 +2484,66 @@ module.exports = __webpack_require__(434)
 
 /***/ }),
 
+/***/ 222:
+/***/ (function(module, exports, __webpack_require__) {
+
+var arrayUniq = __webpack_require__(738);
+
+function Charset() {
+  this.chars = '';
+}
+
+Charset.prototype.setType = function(type) {
+  var chars;
+  
+  var numbers    = '0123456789';
+  var charsLower = 'abcdefghijklmnopqrstuvwxyz';
+  var charsUpper = charsLower.toUpperCase();
+  var hexChars   = 'abcdef';
+  
+  if (type === 'alphanumeric') {
+    chars = numbers + charsLower + charsUpper;
+  }
+  else if (type === 'numeric') {
+    chars = numbers;
+  }
+  else if (type === 'alphabetic') {
+    chars = charsLower + charsUpper;
+  }
+  else if (type === 'hex') {
+    chars = numbers + hexChars;
+  }
+  else {
+    chars = type;
+  }
+  
+  this.chars = chars;
+}
+
+Charset.prototype.removeUnreadable = function() {
+  var unreadableChars = /[0OIl]/g;
+  this.chars = this.chars.replace(unreadableChars, '');
+}
+
+Charset.prototype.setcapitalization = function(capitalization) {
+  if (capitalization === 'uppercase') {
+    this.chars = this.chars.toUpperCase();
+  }
+  else if (capitalization === 'lowercase') {
+    this.chars = this.chars.toLowerCase();
+  }
+}
+
+Charset.prototype.removeDuplicates = function() {
+  var charMap = this.chars.split('');
+  charMap = arrayUniq(charMap);
+  this.chars = charMap.join('');
+}
+
+module.exports = exports = Charset;
+
+/***/ }),
+
 /***/ 239:
 /***/ (function(module) {
 
@@ -2732,6 +2792,81 @@ module.exports = __webpack_require__(670);
 /***/ (function(module) {
 
 module.exports = require("crypto");
+
+/***/ }),
+
+/***/ 420:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+
+var crypto  = __webpack_require__(417);
+var Charset = __webpack_require__(222);
+
+function safeRandomBytes(length) {
+  while (true) {
+    try {
+      return crypto.randomBytes(length);
+    } catch(e) {
+      continue;
+    }
+  }
+}
+
+exports.generate = function(options) {
+  
+  var charset = new Charset();
+  
+  var length, chars, capitalization, string = '';
+  
+  // Handle options
+  if (typeof options === 'object') {
+    length = options.length || 32;
+    
+    if (options.charset) {
+      charset.setType(options.charset);
+    }
+    else {
+      charset.setType('alphanumeric');
+    }
+    
+    if (options.capitalization) {
+      charset.setcapitalization(options.capitalization);
+    }
+    
+    if (options.readable) {
+      charset.removeUnreadable();
+    }
+    
+    charset.removeDuplicates();
+  }
+  else if (typeof options === 'number') {
+    length = options;
+    charset.setType('alphanumeric');
+  }
+  else {
+    length = 32;
+    charset.setType('alphanumeric');
+  }
+  
+  // Generate the string
+  var charsLen = charset.chars.length;
+  var maxByte = 256 - (256 % charsLen);
+  while (length > 0) {
+    var buf = safeRandomBytes(Math.ceil(length * 256 / maxByte));
+    for (var i = 0; i < buf.length && length > 0; i++) {
+      var randomByte = buf.readUInt8(i);
+      if (randomByte < maxByte) {
+        string += charset.chars.charAt(randomByte % charsLen);
+        length--;
+      }
+    }
+  }
+
+  return string;
+};
+
 
 /***/ }),
 
@@ -3854,7 +3989,12 @@ exports.NKeysError = NKeysError;
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(422);
 const core_1 = __webpack_require__(470);
+const randomstring_1 = __webpack_require__(802);
 const ts_nats_1 = __webpack_require__(341);
+const randomOptions = {
+    length: 20,
+    charset: "alphanumeric"
+};
 const parseServers = () => core_1.getInput("servers")
     .split(" ")
     .filter(v => !!v);
@@ -3868,10 +4008,28 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
     });
 });
 (() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    const con = [];
+    let con = [];
     for (let server of servers)
         con.push(testServer(server));
-    yield Promise.all(con);
+    yield Promise.all(con).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+    if (core_1.getInput("cluster") === "true") {
+        const p = [];
+        for (let server of servers) {
+            const subject = randomstring_1.generate(randomOptions);
+            const nc = yield ts_nats_1.connect(server);
+            p.push(new Promise((r, j) => {
+                let count = 0;
+                nc.subscribe(subject, () => {
+                    if (++count === servers.length)
+                        r();
+                });
+                setTimeout(() => j(new Error(`subscription timeout`)), 1000);
+            }));
+            for (let target of servers)
+                ts_nats_1.connect(target).then(nc => nc.publish(subject));
+        }
+        Promise.all(p).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+    }
 }))();
 //# sourceMappingURL=index.js.map
 
@@ -5913,6 +6071,74 @@ exports.Connect = Connect;
 
 /***/ }),
 
+/***/ 738:
+/***/ (function(module) {
+
+"use strict";
+
+
+// there's 3 implementations written in increasing order of efficiency
+
+// 1 - no Set type is defined
+function uniqNoSet(arr) {
+	var ret = [];
+
+	for (var i = 0; i < arr.length; i++) {
+		if (ret.indexOf(arr[i]) === -1) {
+			ret.push(arr[i]);
+		}
+	}
+
+	return ret;
+}
+
+// 2 - a simple Set type is defined
+function uniqSet(arr) {
+	var seen = new Set();
+	return arr.filter(function (el) {
+		if (!seen.has(el)) {
+			seen.add(el);
+			return true;
+		}
+	});
+}
+
+// 3 - a standard Set type is defined and it has a forEach method
+function uniqSetWithForEach(arr) {
+	var ret = [];
+
+	(new Set(arr)).forEach(function (el) {
+		ret.push(el);
+	});
+
+	return ret;
+}
+
+// V8 currently has a broken implementation
+// https://github.com/joyent/node/issues/8449
+function doesForEachActuallyWork() {
+	var ret = false;
+
+	(new Set([true])).forEach(function (el) {
+		ret = el;
+	});
+
+	return ret === true;
+}
+
+if ('Set' in global) {
+	if (typeof Set.prototype.forEach === 'function' && doesForEachActuallyWork()) {
+		module.exports = uniqSetWithForEach;
+	} else {
+		module.exports = uniqSet;
+	}
+} else {
+	module.exports = uniqNoSet;
+}
+
+
+/***/ }),
+
 /***/ 740:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -6098,6 +6324,13 @@ module.exports = require("fs");
 /***/ (function(module) {
 
 module.exports = {"name":"nuid","version":"1.1.4","description":"NUID - A highly performant unique identifier generator.","keywords":["unique","identifier","generator"],"homepage":"https://nats.io","repository":{"type":"git","url":"git@github.com:nats-io/node-nuid.git"},"bugs":{"url":"https://github.com/nats-io/node-nuid/issues"},"license":"Apache-2.0","private":false,"author":{"name":"The NATS Authors"},"contributors":[],"main":"./index.js","scripts":{"depcheck":"dependency-check --no-dev package.json","depcheck:unused":"dependency-check package.json --no-dev --entry ./**/*.js","test:unit":"mkdir -p reports/ && NODE_ENV=test multi='spec=- xunit=reports/mocha-xunit.xml' nyc mocha --timeout 10000 --slow 750","test":"npm run depcheck && npm run depcheck:unused && npm run lint && npm run test:unit","coveralls":"nyc report --reporter=text-lcov | coveralls","cover":"nyc report --reporter=html && open coverage/index.html","lint":"standard './**/*.js'","fmt":"standard --fix './**/*.js'"},"engines":{"node":">= 8.16.0"},"dependencies":{},"devDependencies":{"coveralls":"^3.0.9","dependency-check":"^4.1.0","eslint":"^6.8.0","mocha":"^7.0.1","mocha-lcov-reporter":"1.3.0","nyc":"^15.0.0","should":"^13.2.3","standard":"^14.3.1"},"nyc":{"include":["lib/**"],"exclude":["test/**","examples/**","benchmark/**"]},"typings":"./index.d.ts"};
+
+/***/ }),
+
+/***/ 802:
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+module.exports = __webpack_require__(420);
 
 /***/ }),
 

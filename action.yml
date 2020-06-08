@@ -7,6 +7,10 @@ inputs:
   servers:
     description: "The servers requiring testing. e.g. 'nats://localhost:4222 nats://localhost:4223'"
     required: true
+  cluster:
+    description: "Whether the servers form a cluster"
+    required: false
+    default: "false"
 runs:
   using: "node12"
   main: "dist/index.js"
