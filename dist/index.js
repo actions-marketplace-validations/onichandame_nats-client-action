@@ -4013,6 +4013,7 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
         con.push(testServer(server));
     yield Promise.all(con).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
     if (core_1.getInput("cluster") === "true") {
+        core_1.info("testing cluster");
         const p = [];
         for (let server of servers) {
             const subject = randomstring_1.generate(randomOptions);
@@ -4020,6 +4021,7 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
             p.push(new Promise((r, j) => {
                 let count = 0;
                 nc.subscribe(subject, () => {
+                    core_1.info(`testing subscription on ${server} ${count + 1}/${servers.length}`);
                     if (++count === servers.length)
                         r();
                 });
