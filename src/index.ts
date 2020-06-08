@@ -1,11 +1,5 @@
 import { setFailed, info, getInput } from "@actions/core"
-import { generate } from "randomstring"
 import { connect } from "ts-nats"
-
-const randomOptions: Parameters<typeof generate>[0] = {
-  length: 20,
-  charset: "alphanumeric"
-}
 
 const parseServers = (): string[] =>
   getInput("servers")
@@ -29,16 +23,8 @@ const testServer = async (server: string) => {
       p = p.concat(
         servers.map(
           server =>
-            new Promise((r, j) => {
+            new Promise((_, j) => {
               info(`testing subscription on ${server}`)
-              const subject = generate(randomOptions)
-              let count = 0
-              const total = servers.length
-              connect(server).then(nc => {
-                nc.subscribe(subject, () => {
-                  if (++count == total) r()
-                })
-              })
               setTimeout(() => j(new Error(`subscription timeout`)), 5000)
             })
         )
