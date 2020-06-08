@@ -19,8 +19,6 @@ const testServer = async (server: string) => {
     await Promise.all(con)
     if (getInput("cluster") === "true") {
       info("testing cluster")
-      let p: Promise<any>[] = []
-      await Promise.all(p)
     }
   } catch (e) {
     setFailed(JSON.stringify(e))

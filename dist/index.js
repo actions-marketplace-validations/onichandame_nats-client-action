@@ -3871,8 +3871,6 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
         yield Promise.all(con);
         if (core_1.getInput("cluster") === "true") {
             core_1.info("testing cluster");
-            let p = [];
-            yield Promise.all(p);
         }
     }
     catch (e) {
