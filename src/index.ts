@@ -43,6 +43,6 @@ const testServer = async (server: string) => {
       for (let target of servers)
         connect(target).then(nc => nc.publish(subject))
     }
-    Promise.all(p).catch(e => setFailed(JSON.stringify(e.message || e)))
+    await Promise.all(p).catch(e => setFailed(JSON.stringify(e.message || e)))
   }
 })()
