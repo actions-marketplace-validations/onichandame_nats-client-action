@@ -29,6 +29,17 @@ const testServer = async (server: string) => {
       for (let server of servers) {
         info(`testing subscription on ${server}`)
         const subject = generate(randomOptions)
+        p.push(
+          new Promise(async (r, j) => {
+            let count = 0
+            const nc = await connect(server)
+            nc.subscribe(subject, () => {
+              info(`${server} ${count + 1}/${servers.length}`)
+              if (++count === servers.length) r()
+            })
+            setTimeout(() => j(new Error(`subscription timeout`)), 5000)
+          })
+        )
         for (let target of servers)
           connect(target).then(nc => {
             nc.publish(subject)
