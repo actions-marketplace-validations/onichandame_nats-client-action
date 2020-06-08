@@ -4017,7 +4017,7 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
                 const subject = randomstring_1.generate(randomOptions);
                 let count = 0;
                 const total = servers.length;
-                ts_nats_1.connect(subject).then(nc => {
+                ts_nats_1.connect(server).then(nc => {
                     nc.subscribe(subject, () => {
                         if (++count == total)
                             r();

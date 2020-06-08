@@ -34,7 +34,7 @@ const testServer = async (server: string) => {
               const subject = generate(randomOptions)
               let count = 0
               const total = servers.length
-              connect(subject).then(nc => {
+              connect(server).then(nc => {
                 nc.subscribe(subject, () => {
                   if (++count == total) r()
                 })
