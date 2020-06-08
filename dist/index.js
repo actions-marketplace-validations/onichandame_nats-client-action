@@ -4028,7 +4028,7 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
             for (let target of servers)
                 ts_nats_1.connect(target).then(nc => nc.publish(subject));
         }
-        Promise.all(p).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
+        yield Promise.all(p).catch(e => core_1.setFailed(JSON.stringify(e.message || e)));
     }
 }))();
 //# sourceMappingURL=index.js.map
