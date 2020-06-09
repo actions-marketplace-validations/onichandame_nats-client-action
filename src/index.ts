@@ -54,7 +54,7 @@ async function run() {
     }
     await Promise.all(p)
   } catch (e) {
-    setFailed(JSON.stringify(e))
+    setFailed(JSON.stringify(e.message || e))
   }
 }
 

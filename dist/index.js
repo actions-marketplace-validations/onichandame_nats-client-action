@@ -4042,7 +4042,7 @@ function run() {
             yield Promise.all(p);
         }
         catch (e) {
-            core_1.setFailed(JSON.stringify(e));
+            core_1.setFailed(JSON.stringify(e.message || e));
         }
     });
 }
