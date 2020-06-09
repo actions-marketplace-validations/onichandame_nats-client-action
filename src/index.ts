@@ -30,7 +30,7 @@ async function run() {
       for (let server of servers) {
         info(`testing subscription on ${server}`)
         const subject = generate(randomOptions)
-        const nc = await connect(server)
+        const nc = await connect({ servers: servers })
         const total = servers.length
         await new Promise(async (r, j) => {
           let count = 0

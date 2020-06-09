@@ -4016,7 +4016,7 @@ function run() {
                 for (let server of servers) {
                     core_1.info(`testing subscription on ${server}`);
                     const subject = randomstring_1.generate(randomOptions);
-                    const nc = yield ts_nats_1.connect(server);
+                    const nc = yield ts_nats_1.connect({ servers: servers });
                     const total = servers.length;
                     yield new Promise((r, j) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                         let count = 0;
