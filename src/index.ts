@@ -27,7 +27,10 @@ const testCluster = async (server: string) => {
   return new Promise((r, j) => {
     setTimeout(() => j(new Error("timeout")), 5000)
     sub.subscribe(subject, e => {
-      if (e) j(e)
+      if (e) {
+        sub.close()
+        j(e)
+      }
       if (++count == servers.length) {
         sub.close()
         r()

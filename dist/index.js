@@ -4011,8 +4011,10 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
     return new Promise((r, j) => {
         setTimeout(() => j(new Error("timeout")), 5000);
         sub.subscribe(subject, e => {
-            if (e)
+            if (e) {
+                sub.close();
                 j(e);
+            }
             if (++count == servers.length) {
                 sub.close();
                 r();
