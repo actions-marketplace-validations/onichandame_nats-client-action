@@ -2,6 +2,7 @@ name: "nats-client-action"
 author: "onichandame"
 description: "Github action to test a NATS server/cluster"
 branding:
+  icon: "arrow-up"
   color: "blue"
 inputs:
   servers:
