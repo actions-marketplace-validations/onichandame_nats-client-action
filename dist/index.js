@@ -4003,6 +4003,29 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
     core_1.info(`testing server ${server}`);
     return ts_nats_1.connect(server).then(nc => nc.close());
 });
+const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+    core_1.info(`testing server ${server} in cluster ${JSON.stringify(servers)}`);
+    const subject = randomstring_1.generate(randomOptions);
+    const sub = yield ts_nats_1.connect(server);
+    let count = 0;
+    return new Promise((r, j) => {
+        setTimeout(() => j(new Error("timeout")), 5000);
+        sub.subscribe(subject, e => {
+            if (e)
+                j(e);
+            if (++count == servers.length) {
+                sub.close();
+                r();
+            }
+        });
+        servers.forEach((s) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
+            const pub = yield ts_nats_1.connect(s);
+            pub.publish(subject);
+            yield pub.flush();
+            pub.close();
+        }));
+    });
+});
 function run() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         try {
@@ -4013,20 +4036,7 @@ function run() {
             core_1.info("connection to all servers tested");
             if (core_1.getInput("cluster") === "true") {
                 core_1.info("testing cluster");
-                for (let server of servers) {
-                    core_1.info(`testing subscription on ${server}`);
-                    const subject = randomstring_1.generate(randomOptions);
-                    const nc = yield ts_nats_1.connect({ servers: servers });
-                    yield new Promise((r, j) => {
-                        setTimeout(() => j(new Error("timeout")), 5000);
-                        nc.subscribe(subject, () => {
-                            nc.close();
-                            r();
-                        });
-                        nc.publish(subject);
-                        nc.flush();
-                    });
-                }
+                yield Promise.all(servers.map(s => testCluster(s)));
             }
         }
         catch (e) {

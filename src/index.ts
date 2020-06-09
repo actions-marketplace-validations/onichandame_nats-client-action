@@ -19,6 +19,29 @@ const testServer = async (server: string) => {
   return connect(server).then(nc => nc.close())
 }
 
+const testCluster = async (server: string) => {
+  info(`testing server ${server} in cluster ${JSON.stringify(servers)}`)
+  const subject = generate(randomOptions)
+  const sub = await connect(server)
+  let count = 0
+  return new Promise((r, j) => {
+    setTimeout(() => j(new Error("timeout")), 5000)
+    sub.subscribe(subject, e => {
+      if (e) j(e)
+      if (++count == servers.length) {
+        sub.close()
+        r()
+      }
+    })
+    servers.forEach(async s => {
+      const pub = await connect(s)
+      pub.publish(subject)
+      await pub.flush()
+      pub.close()
+    })
+  })
+}
+
 async function run() {
   try {
     let con: Promise<any>[] = []
@@ -27,20 +50,7 @@ async function run() {
     info("connection to all servers tested")
     if (getInput("cluster") === "true") {
       info("testing cluster")
-      for (let server of servers) {
-        info(`testing subscription on ${server}`)
-        const subject = generate(randomOptions)
-        const nc = await connect({ servers: servers })
-        await new Promise((r, j) => {
-          setTimeout(() => j(new Error("timeout")), 5000)
-          nc.subscribe(subject, () => {
-            nc.close()
-            r()
-          })
-          nc.publish(subject)
-          nc.flush()
-        })
-      }
+      await Promise.all(servers.map(s => testCluster(s)))
     }
   } catch (e) {
     setFailed(JSON.stringify(e))
