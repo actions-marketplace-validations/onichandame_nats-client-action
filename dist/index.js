@@ -4011,10 +4011,8 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
     return new Promise((r, j) => {
         setTimeout(() => j(new Error("timeout")), 5000);
         sub.subscribe(subject, e => {
-            if (e) {
-                sub.close();
+            if (e)
                 j(e);
-            }
             if (++count == servers.length) {
                 sub.close();
                 r();
@@ -4026,6 +4024,9 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
             yield pub.flush();
             pub.close();
         }));
+    }).catch(e => {
+        sub.close();
+        throw e;
     });
 });
 function run() {
