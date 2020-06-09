@@ -16,7 +16,13 @@ const servers = parseServers()
 
 const testServer = async (server: string) => {
   info(`testing server ${server}`)
-  return connect({ url: server, timeout: 5000 }).then(nc => nc.close())
+  return new Promise((r, j) => {
+    setTimeout(() => j(new Error(`connection to ${server} timed out`)), 5000)
+    connect(server).then(nc => {
+      nc.close()
+      r()
+    })
+  })
 }
 
 const testCluster = async (server: string) => {

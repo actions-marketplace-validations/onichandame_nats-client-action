@@ -4001,7 +4001,13 @@ const parseServers = () => core_1.getInput("servers")
 const servers = parseServers();
 const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     core_1.info(`testing server ${server}`);
-    return ts_nats_1.connect({ url: server, timeout: 5000 }).then(nc => nc.close());
+    return new Promise((r, j) => {
+        setTimeout(() => j(new Error(`connection to ${server} timed out`)), 5000);
+        ts_nats_1.connect(server).then(nc => {
+            nc.close();
+            r();
+        });
+    });
 });
 const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
     core_1.info(`testing server ${server} in cluster ${JSON.stringify(servers)}`);
