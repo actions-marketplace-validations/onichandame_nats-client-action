@@ -26,8 +26,7 @@ const testCluster = async (server: string) => {
   let count = 0
   return new Promise((r, j) => {
     setTimeout(
-      () =>
-        j(new Error(`timeout at ${server}, ${count + 1}/${servers.length}`)),
+      () => j(new Error(`timeout at ${server}, ${count}/${servers.length}`)),
       5000
     )
     sub.subscribe(subject, e => {
