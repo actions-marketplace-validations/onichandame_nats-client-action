@@ -25,7 +25,11 @@ const testCluster = async (server: string) => {
   const sub = await connect(server)
   let count = 0
   return new Promise((r, j) => {
-    setTimeout(() => j(new Error(`timeout at ${server}`)), 5000)
+    setTimeout(
+      () =>
+        j(new Error(`timeout at ${server}, ${count + 1}/${servers.length}`)),
+      5000
+    )
     sub.subscribe(subject, e => {
       if (e) j(`failed to receive ${count + 1}/${servers.length} at ${server}`)
       if (++count == servers.length) {
@@ -37,6 +41,7 @@ const testCluster = async (server: string) => {
       const pub = await connect(s)
       pub.publish(subject)
       await pub.flush()
+      info(`testing ${server}, message from ${s} published`)
       pub.close()
     })
   }).catch(e => {

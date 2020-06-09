@@ -4009,7 +4009,7 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
     const sub = yield ts_nats_1.connect(server);
     let count = 0;
     return new Promise((r, j) => {
-        setTimeout(() => j(new Error(`timeout at ${server}`)), 5000);
+        setTimeout(() => j(new Error(`timeout at ${server}, ${count + 1}/${servers.length}`)), 5000);
         sub.subscribe(subject, e => {
             if (e)
                 j(`failed to receive ${count + 1}/${servers.length} at ${server}`);
@@ -4022,6 +4022,7 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
             const pub = yield ts_nats_1.connect(s);
             pub.publish(subject);
             yield pub.flush();
+            core_1.info(`testing ${server}, message from ${s} published`);
             pub.close();
         }));
     }).catch(e => {
