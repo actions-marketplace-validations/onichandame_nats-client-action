@@ -33,6 +33,7 @@ async function run() {
         const nc = await connect(server)
         nc.publish(subject)
         await nc.flush()
+        nc.close()
         info(`${server} flushed`)
       }
     }

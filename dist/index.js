@@ -4019,6 +4019,7 @@ function run() {
                     const nc = yield ts_nats_1.connect(server);
                     nc.publish(subject);
                     yield nc.flush();
+                    nc.close();
                     core_1.info(`${server} flushed`);
                 }
             }
