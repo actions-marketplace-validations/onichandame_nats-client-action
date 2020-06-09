@@ -32,6 +32,7 @@ const testCluster = async (server: string) => {
     sub.subscribe(subject, e => {
       if (e) j(`failed to receive ${count + 1}/${servers.length} at ${server}`)
       if (++count == servers.length) {
+        info(`subscription on ${server} received messages from all servers`)
         sub.close()
         r()
       }

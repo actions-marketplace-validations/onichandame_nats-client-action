@@ -4014,6 +4014,7 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
             if (e)
                 j(`failed to receive ${count + 1}/${servers.length} at ${server}`);
             if (++count == servers.length) {
+                core_1.info(`subscription on ${server} received messages from all servers`);
                 sub.close();
                 r();
             }
