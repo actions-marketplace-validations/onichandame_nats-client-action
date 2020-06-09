@@ -18,32 +18,27 @@ const testServer = async (server: string) => {
   info(`testing server ${server}`)
   return connect(server).then(nc => nc.close())
 }
-;(async () => {
+
+async function run() {
   try {
     let con: Promise<any>[] = []
     for (let server of servers) con.push(testServer(server))
     await Promise.all(con)
+    info("connection to all servers tested")
     if (getInput("cluster") === "true") {
       info("testing cluster")
       for (let server of servers) {
-        info(`testing subscription on ${server}`)
+        info(`testing pubish on ${server}`)
         const subject = generate(randomOptions)
-        const total = servers.length
-        let count = 0
         const nc = await connect(server)
-        nc.subscribe(subject, () => ++count)
-        for (let ins of servers) {
-          const i = await connect(ins)
-          i.publish(subject)
-          await i.flush()
-        }
-        if (count < total)
-          throw new Error(
-            `${server} expects ${total} messages but only got ${count}`
-          )
+        nc.publish(subject)
+        await nc.flush()
+        info(`${server} flushed`)
       }
     }
   } catch (e) {
     setFailed(JSON.stringify(e))
   }
-})()
+}
+
+run()

@@ -4003,35 +4003,32 @@ const testServer = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functio
     core_1.info(`testing server ${server}`);
     return ts_nats_1.connect(server).then(nc => nc.close());
 });
-(() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let con = [];
-        for (let server of servers)
-            con.push(testServer(server));
-        yield Promise.all(con);
-        if (core_1.getInput("cluster") === "true") {
-            core_1.info("testing cluster");
-            for (let server of servers) {
-                core_1.info(`testing subscription on ${server}`);
-                const subject = randomstring_1.generate(randomOptions);
-                const total = servers.length;
-                let count = 0;
-                const nc = yield ts_nats_1.connect(server);
-                nc.subscribe(subject, () => ++count);
-                for (let ins of servers) {
-                    const i = yield ts_nats_1.connect(ins);
-                    i.publish(subject);
-                    yield i.flush();
+function run() {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        try {
+            let con = [];
+            for (let server of servers)
+                con.push(testServer(server));
+            yield Promise.all(con);
+            core_1.info("connection to all servers tested");
+            if (core_1.getInput("cluster") === "true") {
+                core_1.info("testing cluster");
+                for (let server of servers) {
+                    core_1.info(`testing pubish on ${server}`);
+                    const subject = randomstring_1.generate(randomOptions);
+                    const nc = yield ts_nats_1.connect(server);
+                    nc.publish(subject);
+                    yield nc.flush();
+                    core_1.info(`${server} flushed`);
                 }
-                if (count < total)
-                    throw new Error(`${server} expects ${total} messages but only got ${count}`);
             }
         }
-    }
-    catch (e) {
-        core_1.setFailed(JSON.stringify(e));
-    }
-}))();
+        catch (e) {
+            core_1.setFailed(JSON.stringify(e));
+        }
+    });
+}
+run();
 //# sourceMappingURL=index.js.map
 
 /***/ }),
