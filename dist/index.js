@@ -4009,10 +4009,10 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
     const sub = yield ts_nats_1.connect(server);
     let count = 0;
     return new Promise((r, j) => {
-        setTimeout(() => j(new Error("timeout")), 5000);
+        setTimeout(() => j(new Error(`timeout at ${server}`)), 5000);
         sub.subscribe(subject, e => {
             if (e)
-                j(e);
+                j(`failed to receive ${count + 1}/${servers.length} at ${server}`);
             if (++count == servers.length) {
                 sub.close();
                 r();
