@@ -4029,15 +4029,14 @@ const testCluster = (server) => tslib_1.__awaiter(void 0, void 0, void 0, functi
 function run() {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         try {
-            let con = [];
+            let p = [];
             for (let server of servers)
-                con.push(testServer(server));
-            yield Promise.all(con);
-            core_1.info("connection to all servers tested");
+                p.push(testServer(server));
             if (core_1.getInput("cluster") === "true") {
-                core_1.info("testing cluster");
-                yield Promise.all(servers.map(s => testCluster(s)));
+                for (let server of servers)
+                    p.push(testCluster(server));
             }
+            yield Promise.all(p);
         }
         catch (e) {
             core_1.setFailed(JSON.stringify(e));

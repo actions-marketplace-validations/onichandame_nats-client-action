@@ -44,14 +44,12 @@ const testCluster = async (server: string) => {
 
 async function run() {
   try {
-    let con: Promise<any>[] = []
-    for (let server of servers) con.push(testServer(server))
-    await Promise.all(con)
-    info("connection to all servers tested")
+    let p: Promise<any>[] = []
+    for (let server of servers) p.push(testServer(server))
     if (getInput("cluster") === "true") {
-      info("testing cluster")
-      await Promise.all(servers.map(s => testCluster(s)))
+      for (let server of servers) p.push(testCluster(server))
     }
+    await Promise.all(p)
   } catch (e) {
     setFailed(JSON.stringify(e))
   }
