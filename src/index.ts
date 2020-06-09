@@ -31,23 +31,14 @@ async function run() {
         info(`testing subscription on ${server}`)
         const subject = generate(randomOptions)
         const nc = await connect({ servers: servers })
-        const total = servers.length
-        await new Promise(async (r, j) => {
-          let count = 0
+        await new Promise((r, j) => {
+          setTimeout(() => j(new Error("timeout")), 5000)
           nc.subscribe(subject, () => {
-            info(`testing ${server}, received ${count + 1}/${total}`)
-            if (++count == total) {
-              nc.close()
-              r()
-            }
+            nc.close()
+            r()
           })
-          setTimeout(() => j("timeout"), 5000)
-          for (let ins of servers) {
-            const i = await connect(ins)
-            i.publish(subject)
-            await i.flush()
-            i.close()
-          }
+          nc.publish(subject)
+          nc.flush()
         })
       }
     }
