@@ -4014,13 +4014,23 @@ function run() {
             if (core_1.getInput("cluster") === "true") {
                 core_1.info("testing cluster");
                 for (let server of servers) {
-                    core_1.info(`testing pubish on ${server}`);
+                    core_1.info(`testing subscription on ${server}`);
                     const subject = randomstring_1.generate(randomOptions);
                     const nc = yield ts_nats_1.connect(server);
-                    nc.publish(subject);
-                    yield nc.flush();
-                    nc.close();
-                    core_1.info(`${server} flushed`);
+                    const total = servers.length;
+                    let count = 0;
+                    nc.subscribe(subject, () => {
+                        core_1.info(`testing ${server}, received ${count + 1}/${total}`);
+                        if (++count == total) {
+                            nc.close();
+                        }
+                    });
+                    for (let ins of servers) {
+                        const i = yield ts_nats_1.connect(ins);
+                        i.publish(subject);
+                        yield i.flush();
+                        i.close();
+                    }
                 }
             }
         }

@@ -28,13 +28,23 @@ async function run() {
     if (getInput("cluster") === "true") {
       info("testing cluster")
       for (let server of servers) {
-        info(`testing pubish on ${server}`)
+        info(`testing subscription on ${server}`)
         const subject = generate(randomOptions)
         const nc = await connect(server)
-        nc.publish(subject)
-        await nc.flush()
-        nc.close()
-        info(`${server} flushed`)
+        const total = servers.length
+        let count = 0
+        nc.subscribe(subject, () => {
+          info(`testing ${server}, received ${count + 1}/${total}`)
+          if (++count == total) {
+            nc.close()
+          }
+        })
+        for (let ins of servers) {
+          const i = await connect(ins)
+          i.publish(subject)
+          await i.flush()
+          i.close()
+        }
       }
     }
   } catch (e) {
