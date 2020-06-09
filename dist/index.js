@@ -4018,19 +4018,23 @@ function run() {
                     const subject = randomstring_1.generate(randomOptions);
                     const nc = yield ts_nats_1.connect(server);
                     const total = servers.length;
-                    let count = 0;
-                    nc.subscribe(subject, () => {
-                        core_1.info(`testing ${server}, received ${count + 1}/${total}`);
-                        if (++count == total) {
-                            nc.close();
+                    yield new Promise((r, j) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                        let count = 0;
+                        nc.subscribe(subject, () => {
+                            core_1.info(`testing ${server}, received ${count + 1}/${total}`);
+                            if (++count == total) {
+                                nc.close();
+                                r();
+                            }
+                        });
+                        setTimeout(() => j("timeout"), 5000);
+                        for (let ins of servers) {
+                            const i = yield ts_nats_1.connect(ins);
+                            i.publish(subject);
+                            yield i.flush();
+                            i.close();
                         }
-                    });
-                    for (let ins of servers) {
-                        const i = yield ts_nats_1.connect(ins);
-                        i.publish(subject);
-                        yield i.flush();
-                        i.close();
-                    }
+                    }));
                 }
             }
         }
